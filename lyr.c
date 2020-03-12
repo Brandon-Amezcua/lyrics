@@ -8,6 +8,10 @@
 #define ARGC_ERROR 1
 #define FILE_ERROR 2
 
+char* pattern[MAXLINE];
+char* temp[MAXLINE];
+
+memset(temp, 0, sizeof(temp));
 
 void echo_commands(int argc, const char* argv[]) {
   while (--argc > 0) {
@@ -32,15 +36,15 @@ void process_commands(int argc, const char* argv[]) {
   char line[MAXLINE];
   long lineno = 0;
   int c, found = 0;
-  bool except = false, number_lines = false, extra_arg = false;
+  bool except = false, number_lines = false, extra_arg = false; ignore_case = false;
   FILE* fin = NULL;
 
   if (argc < 3) {
-    fprintf(stderr, "Uaage: ./find -f filename -x -n pattern\n");
+    fprintf(stderr, "Usage: ./find -f filename -x -n pattern\n");
     exit(ARGC_ERROR);
   }
 
-void stricpy (char* s, char* t) {
+void* stricpy (char* s, char* t) {
     while((*s++ = islower(*t++)) != '\0') { }
 }
 
@@ -59,20 +63,23 @@ void stricpy (char* s, char* t) {
     case: 'p':
         ++argv;
         --argc;
-        char* (*copy)(char*, const char*) = ignore_case ? stricpy : strcpy;
-        copy(pattern, *argv);
+        strcpy(pattern, *argv);
         extra_arg = true;
-        ++argv;
         break;
       case 'x':  except = true;  break;           // turn on DON'T find given pattern
       case 'n':  number_lines = true;  break;     // turn on line numbering
+      case 'i':  ignore_case = true; break;       // turn on upper/lower case sensitivity
       default: printf("find: illegal option %c\n", c); argc = 0; found = -1; break;
       }
     }
   }
 
-  if (argc != 1) { printf("no pattern specified\n");
+  if (strlen(pattern) == 0) { printf("no pattern specified\n");
   } else {
+
+    char* (*copy)(char*, const char*) = ignore_case ? stricpy : strcpy;
+    copy(temp, pattern);
+
     while (getline_(fin, line, MAXLINE) > 0) {
       lineno++;
       bool found_it = strstr(line, *argv) != NULL;
